@@ -7,7 +7,7 @@ static WordsCount WordsPerTest {
 };
 
 int main(int argc, char* argv[])
-{    
+{  
     TestEntryPoint NewTest(WordsPerTest);
     NewTest.StartTests(); 
     NewTest.SaveResults(false);

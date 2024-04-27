@@ -2,6 +2,14 @@
 #include <algorithm>
 #include <iostream>
 
+namespace
+{
+    const char* WELCOME_MESSAGE           = "Welcome! Please choose iteration count between 1 (fast) and 10 (slowest)";
+    const char* WRONG_INPUT_ERROR_TEXT    = "Input is not a number. Defaulting to 1 iteration"; 
+    const char* MIN_ITERATIONS_ERROR_TEXT = "Interaction count input is <= 0. Setting Iterations to 1.";
+    const char* MAX_ITERATIONS_ERROR_TEXT = "Interaction count input is > 10. Setting Iterations to 10.";
+}
+
 void StringInsertion::InsertIntoVector(const VectorStrings& A, VectorStrings& B)
 {
     for(const auto& String : A)
@@ -277,17 +285,36 @@ void InsertionTest::InitTest()
 
 TestEntryPoint::TestEntryPoint(WordsCount InWordsCount) : mWordsPerTest(std::move(InWordsCount))
 {
-    std::cout << "Choose iteration count between (1, 10)" << std::endl;
+    std::cout << WELCOME_MESSAGE << std::endl;
     std::cin >> ITERATIONS;
-    
-    if(ITERATIONS < 1)
-        std::cout << MIN_ITERATIONS_ERROR_TEXT << std::endl;
-    
-    else if(ITERATIONS > 10)
-        std::cout << MAX_ITERATIONS_ERROR_TEXT << std::endl; 
+
+    ValidateInput();         
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
         
     std::cout << "Initiating Tests with " << ITERATIONS << " iterations per word count" << std::endl;
-} 
+}
+
+void TestEntryPoint::ValidateInput()
+{
+    if(!std::cin)
+    {
+        std::cout << WRONG_INPUT_ERROR_TEXT << std::endl;
+        ITERATIONS = 1;
+    }
+            
+    else if(ITERATIONS < 1)
+    {
+        std::cout << MIN_ITERATIONS_ERROR_TEXT << std::endl;
+        ITERATIONS = 1;
+    }        
+    
+    else if(ITERATIONS > 10)
+    {
+        std::cout << MAX_ITERATIONS_ERROR_TEXT << std::endl;
+        ITERATIONS = 10; 
+    }
+}
 
 void TestEntryPoint::StartTests()
 {
@@ -334,8 +361,12 @@ void TestEntryPoint::SaveResults(const bool bPrintToConsole)
     if(bPrintToConsole)
         std::cout << Results << "\n";
 
+    Results += "Results for " + std::to_string(ITERATIONS) + " iterations per word count\n";
+
     std::ofstream OutputFile(RESULTS_FILE_NAME);
     OutputFile << Results;
     OutputFile.close();
     std::cout << "Tests Completed. Results saved in root folder" << std::endl;
 }
+
+

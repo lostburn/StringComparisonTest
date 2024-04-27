@@ -163,6 +163,8 @@ public:
     void SaveResults(const bool bPrintToConsole); 
 
 private:
+    
+    static void ValidateInput(); 
 
     WordsCount mWordsPerTest;
     TTests mTests; 

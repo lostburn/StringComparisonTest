@@ -15,9 +15,6 @@ static const char* RESULTS_FILE_NAME = "results.csv";
 static const char* LIST_ONE_STRINGS = "list_one.txt"; // The file for the first set of strings.
 static const char* LIST_TWO_STRINGS = "list_two.txt"; // The file for the second set of strings.
 
-static const char* MIN_ITERATIONS_ERROR_TEXT = "Interaction count input is <= 0. Setting Iterations to 1.";
-static const char* MAX_ITERATIONS_ERROR_TEXT = "Interaction count input is > 10. Setting Iterations to 10.";
-
 using HashSize = size_t; 
 using WordsCount = std::vector<int>; 
 using VectorStrings = std::vector<std::string>;
