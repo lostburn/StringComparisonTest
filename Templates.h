@@ -10,17 +10,20 @@
 #include <ranges>
 #include <cassert>
 
-static constexpr int ITERATIONS = 1;
+static int ITERATIONS = 10;
 static const char* RESULTS_FILE_NAME = "results.csv";
-static constexpr int HASH_PRIME = 31; // Prime number for hashing strings. 
 static const char* LIST_ONE_STRINGS = "list_one.txt"; // The file for the first set of strings.
 static const char* LIST_TWO_STRINGS = "list_two.txt"; // The file for the second set of strings.
 
+static const char* MIN_ITERATIONS_ERROR_TEXT = "Interaction count input is <= 0. Setting Iterations to 1.";
+static const char* MAX_ITERATIONS_ERROR_TEXT = "Interaction count input is > 10. Setting Iterations to 10.";
+
+using HashSize = size_t; 
 using WordsCount = std::vector<int>; 
 using VectorStrings = std::vector<std::string>;
-using VectorHashes = std::vector<std::int64_t>;
+using VectorHashes = std::vector<HashSize>;
 using SetStrings = std::unordered_set<std::string>;
-using MapHashes = std::unordered_map<std::int64_t, std::string>;
+using MapHashes = std::unordered_map<HashSize, std::string>;
 using MapStrings = std::unordered_map<std::string, std::string>;
 
 class TestBase; 
@@ -41,15 +44,9 @@ static std::string GetLowercaseString(std::string_view String)
     return LowercaseString;
 }
 
-static int64_t GetStringHash(std::string_view Key, const bool bUseLowerCase = false)
+static HashSize GetStringHash(std::string_view Key, const bool bUseLowerCase = false)
 {
-    int64_t HashCode = 0;
-    const std::string StringToHash = bUseLowerCase ? GetLowercaseString(Key) : Key.data();
-    
-    for(auto i = 0; i < Key.length(); i++)
-        HashCode += static_cast<int64_t>(StringToHash[i]) * static_cast<int64_t>(pow(HASH_PRIME, i));
-
-    return HashCode;  
+    return static_cast<HashSize>(std::hash<std::string>{}(bUseLowerCase ? GetLowercaseString(Key) : Key.data()));
 }
 
 template<typename ContainerType>

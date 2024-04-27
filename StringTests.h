@@ -157,8 +157,7 @@ class TestEntryPoint
 {
 public:
 
-    TestEntryPoint(WordsCount InWordsCount)
-        : mWordsPerTest(std::move(InWordsCount)) { } 
+    TestEntryPoint(WordsCount InWordsCount); 
 
     void StartTests();
     void SaveResults(const bool bPrintToConsole); 

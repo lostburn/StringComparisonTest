@@ -275,6 +275,20 @@ void InsertionTest::InitTest()
     }
 }
 
+TestEntryPoint::TestEntryPoint(WordsCount InWordsCount) : mWordsPerTest(std::move(InWordsCount))
+{
+    std::cout << "Choose iteration count between (1, 10)" << std::endl;
+    std::cin >> ITERATIONS;
+    
+    if(ITERATIONS < 1)
+        std::cout << MIN_ITERATIONS_ERROR_TEXT << std::endl;
+    
+    else if(ITERATIONS > 10)
+        std::cout << MAX_ITERATIONS_ERROR_TEXT << std::endl; 
+        
+    std::cout << "Initiating Tests with " << ITERATIONS << " iterations per word count" << std::endl;
+} 
+
 void TestEntryPoint::StartTests()
 {
     std::cout << "Creating Binary Search Tests..." << std::endl;
@@ -298,7 +312,7 @@ void TestEntryPoint::StartTests()
     mTests.push_back(std::make_unique<InsertionTest>(mWordsPerTest, FTestSetup("S_Ins"), EInsertionType::Set));
     mTests.push_back(std::make_unique<InsertionTest>(mWordsPerTest, FTestSetup("M_Ins"), EInsertionType::Map));
 
-    std::cout << "Starting Tests..." << std::endl;
+    std::cout << "Running Tests..." << std::endl;
 
     for(const auto& Test : mTests)
         Test->Start();
@@ -322,5 +336,6 @@ void TestEntryPoint::SaveResults(const bool bPrintToConsole)
 
     std::ofstream OutputFile(RESULTS_FILE_NAME);
     OutputFile << Results;
-    OutputFile.close(); 
+    OutputFile.close();
+    std::cout << "Tests Completed. Results saved in root folder" << std::endl;
 }
