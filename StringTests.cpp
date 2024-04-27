@@ -1,4 +1,24 @@
 ﻿#include "StringTests.h"
+#include <algorithm>
+#include <iostream>
+
+void StringInsertion::InsertIntoVector(const VectorStrings& A, VectorStrings& B)
+{
+    for(const auto& String : A)
+        B.emplace_back(String); 
+}
+
+void StringInsertion::InsertIntoSet(const VectorStrings& A, SetStrings& B)
+{
+    for(const auto& String : A)
+        B.emplace(String);
+}
+
+void StringInsertion::InsertIntoMap(const VectorStrings& A, MapStrings& B)
+{
+    for(const auto& String : A)
+        B[String] = String;
+}
 
 int BinarySearch::StringCaseSensitive(const VectorStrings& A, const VectorStrings& B)
 {
@@ -43,7 +63,7 @@ int BinarySearch::HashIgnoreCase(const VectorStrings& A, const VectorHashes& B)
     return Equal; 
 }
 
-int DefaultSearch::MyMethod(const VectorStrings& A, const VectorStrings& B)
+int LinearSearch::MyMethod(const VectorStrings& A, const VectorStrings& B)
 {
     int EqualStrings = 0;
 
@@ -71,7 +91,7 @@ int DefaultSearch::MyMethod(const VectorStrings& A, const VectorStrings& B)
     return EqualStrings; 
 }
 
-int DefaultSearch::EqualOperator(const VectorStrings& A, const VectorStrings& B)
+int LinearSearch::EqualOperator(const VectorStrings& A, const VectorStrings& B)
 {
     int EqualStrings = 0;
     
@@ -83,7 +103,7 @@ int DefaultSearch::EqualOperator(const VectorStrings& A, const VectorStrings& B)
     return EqualStrings; 
 }
 
-int ArrayHashSearch::HashCaseSensitive(const VectorStrings& A, const VectorHashes& B)
+int LinearSearch::HashCaseSensitive(const VectorStrings& A, const VectorHashes& B)
 {
     int Equal = 0;
     for(const auto& String : A) {
@@ -94,7 +114,7 @@ int ArrayHashSearch::HashCaseSensitive(const VectorStrings& A, const VectorHashe
     return Equal; 
 }
 
-int ArrayHashSearch::HashLowerCase(const VectorStrings& A, const VectorHashes& B)
+int LinearSearch::HashIgnoreCase(const VectorStrings& A, const VectorHashes& B)
 {
     int Equal = 0;
     for(const auto& String : A) {
@@ -116,7 +136,7 @@ int SearchByKey::StringSetCaseSensitive(const VectorStrings& A, const SetStrings
     return Equal; 
 }
 
-int SearchByKey::StringSetLowercase(const VectorStrings& A, const SetStrings& B)
+int SearchByKey::StringSetIgnoreCase(const VectorStrings& A, const SetStrings& B)
 {
     int Equal = 0;
     for(const auto& String : A) {
@@ -139,7 +159,7 @@ int SearchByKey::HashMapCaseSensitive(const VectorStrings& A, const MapHashes& B
     return Equal;
 }
 
-int SearchByKey::HashMapLowercase(const VectorStrings& A, const MapHashes& B)
+int SearchByKey::HashMapIgnoreCase(const VectorStrings& A, const MapHashes& B)
 {
     int Equal = 0;
     for(const auto& String : A) {
@@ -151,11 +171,33 @@ int SearchByKey::HashMapLowercase(const VectorStrings& A, const MapHashes& B)
     return Equal;
 }
 
+int SearchByKey::StringMapCaseSensitive(const VectorStrings& A, const MapStrings& B)
+{
+    int Equal = 0;
+    for(const auto& String : A) {
+        if(B.contains(String))
+            Equal++;
+    }
+
+    return Equal; 
+}
+
+int SearchByKey::StringMapIgnoreCase(const VectorStrings& A, const MapStrings& B)
+{
+    int Equal = 0;
+    for(const auto& String : A) {
+        if(B.contains(GetLowercaseString(String)))
+            Equal++;
+    }
+
+    return Equal; 
+}
+
 void BinarySearchTest::InitTest()
 {
     for(const int Words : mWordsPerTest)
     {        
-        if(bHashString) {
+        if(bUseHash) {
             TStringData<VectorHashes> StringData; 
             StringData.SetupHashVector(bIgnoreCase, true, Words);
             mResult += RunAndMeasure(StringData, bIgnoreCase ? BinarySearch::HashIgnoreCase : BinarySearch::HashCaseSensitive, ITERATIONS);
@@ -176,7 +218,7 @@ void UnorderedSetTest::InitTest()
     {
         TStringData<SetStrings> StringData;
         StringData.SetupSet(bIgnoreCase, Words);
-        mResult += RunAndMeasure(StringData, bIgnoreCase ? SearchByKey::StringSetLowercase : SearchByKey::StringSetCaseSensitive, ITERATIONS);
+        mResult += RunAndMeasure(StringData, bIgnoreCase ? SearchByKey::StringSetIgnoreCase : SearchByKey::StringSetCaseSensitive, ITERATIONS);
     }
 }
 
@@ -184,29 +226,79 @@ void UnorderedMapTest::InitTest()
 {
     for(const int Words : mWordsPerTest)
     {
-        TStringData<MapHashes> StringData;
-        StringData.SetupMap(bIgnoreCase, Words);
-        mResult += RunAndMeasure(StringData, bIgnoreCase ? SearchByKey::HashMapLowercase : SearchByKey::HashMapCaseSensitive, ITERATIONS);
+        if(bUseHash)
+        {
+            TStringData<MapHashes> StringData;
+            StringData.SetupHashMap(bIgnoreCase, Words);
+            mResult += RunAndMeasure(StringData, bIgnoreCase ? SearchByKey::HashMapIgnoreCase : SearchByKey::HashMapCaseSensitive, ITERATIONS);
+        }
+
+        else
+        {
+            TStringData<MapStrings> StringData;
+            StringData.SetupStringMap(bIgnoreCase, Words);
+            mResult += RunAndMeasure(StringData, bIgnoreCase ? SearchByKey::StringMapIgnoreCase : SearchByKey::StringMapCaseSensitive, ITERATIONS);
+        }
+    }
+}
+
+void InsertionTest::InitTest()
+{
+    for(const int Words : mWordsPerTest)
+    {
+        switch(mInsertionType)
+        {
+            case(EInsertionType::Vector):
+            {
+                TStringData<VectorStrings> StringData;
+                StringData.SetupListOne(Words);                    
+                mResult += RunAndMeasure(StringData, StringInsertion::InsertIntoVector, ITERATIONS);
+                break; 
+            }
+            case(EInsertionType::Set):
+            {
+                TStringData<SetStrings> StringData;
+                StringData.SetupListOne(Words);
+                mResult += RunAndMeasure(StringData, StringInsertion::InsertIntoSet, ITERATIONS);
+                break;
+            }
+            case(EInsertionType::Map):
+            {
+                TStringData<MapStrings> StringData;
+                StringData.SetupListOne(Words);
+                mResult += RunAndMeasure(StringData, StringInsertion::InsertIntoMap, ITERATIONS);
+                break; 
+            }
+            
+            default: assert(false && "Insertion Type not Handled"); 
+        }
     }
 }
 
 void TestEntryPoint::StartTests()
 {
-    std::cout << "Creating Binary Search Tests...\n";
+    std::cout << "Creating Binary Search Tests..." << std::endl;
     mTests.push_back(std::make_unique<BinarySearchTest>(mWordsPerTest, FTestSetup("BS_S_CS"), false));
     mTests.push_back(std::make_unique<BinarySearchTest>(mWordsPerTest, FTestSetup("BS_S_CI", true), false));
     mTests.push_back(std::make_unique<BinarySearchTest>(mWordsPerTest, FTestSetup("BS_H_CS"), true));
     mTests.push_back(std::make_unique<BinarySearchTest>(mWordsPerTest, FTestSetup("BS_H_CI", true), true));
 
-    std::cout << "Creating Unordered Set Tests...\n";
+    std::cout << "Creating Unordered Set Tests..." << std::endl;
     mTests.push_back(std::make_unique<UnorderedSetTest>(mWordsPerTest, FTestSetup("US_S_CS")));
     mTests.push_back(std::make_unique<UnorderedSetTest>(mWordsPerTest, FTestSetup("US_S_CI", false))); 
 
-    std::cout << "Creating Unordered Map Tests...\n";
-    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_S_CS")));
-    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_S_CI", false)));
+    std::cout << "Creating Unordered Map Tests..." << std::endl;
+    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_S_CS"), false));
+    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_S_CI", false), false));
+    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_H_CS"), true));
+    mTests.push_back(std::make_unique<UnorderedMapTest>(mWordsPerTest, FTestSetup("UM_H_CI", true), true));
 
-    std::cout << "Starting Tests...\n";
+    std::cout << "Creating Insertion Tests..."  << std::endl;
+    mTests.push_back(std::make_unique<InsertionTest>(mWordsPerTest, FTestSetup("V_Ins"), EInsertionType::Vector));
+    mTests.push_back(std::make_unique<InsertionTest>(mWordsPerTest, FTestSetup("S_Ins"), EInsertionType::Set));
+    mTests.push_back(std::make_unique<InsertionTest>(mWordsPerTest, FTestSetup("M_Ins"), EInsertionType::Map));
+
+    std::cout << "Starting Tests..." << std::endl;
 
     for(const auto& Test : mTests)
         Test->Start();

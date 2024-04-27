@@ -8,10 +8,7 @@
 #include <unordered_set>
 #include <vector>
 #include <ranges>
-#include <array>
 #include <cassert>
-#include <algorithm>
-#include <iostream> 
 
 static constexpr int ITERATIONS = 1;
 static const char* RESULTS_FILE_NAME = "results.csv";
@@ -24,12 +21,17 @@ using VectorStrings = std::vector<std::string>;
 using VectorHashes = std::vector<std::int64_t>;
 using SetStrings = std::unordered_set<std::string>;
 using MapHashes = std::unordered_map<std::int64_t, std::string>;
+using MapStrings = std::unordered_map<std::string, std::string>;
 
 class TestBase; 
 using TTests = std::vector<std::unique_ptr<TestBase>>;
 
-template<typename B>
-using CompareFn = int(*)(const VectorStrings&, const B&);
+template<typename ContainerType>
+using CompareFn = int(*)(const VectorStrings&, const ContainerType&);
+
+template<typename ContainerType>
+using InsertFn = void(*)(const VectorStrings&, ContainerType&);
+
 
 static std::string GetLowercaseString(std::string_view String)
 {
@@ -71,6 +73,11 @@ public:
 
     VectorStrings ListOne;
     T ListTwo;
+
+    void SetupListOne(const int WordLimit = 1000)
+    {
+        LoadStringsFromFile(ListOne, LIST_ONE_STRINGS, WordLimit);
+    }
     
     void SetupStringVector(const bool bLowerCase, const bool bSort, const int WordLimit = 1000)
     {
@@ -105,13 +112,22 @@ public:
             ListTwo.insert(bLowerCase ? GetLowercaseString(String) : String);
     }
 
-    void SetupMap(const bool bLowerCase, int WordLimit = 1000)
+    void SetupHashMap(const bool bLowerCase, int WordLimit = 1000)
     {
         static_assert(std::is_same_v<T, MapHashes> && "ListTwo must be of type MapHashes");
         InitFromFile(WordLimit);
 
         for(const auto& String : TempList)
             ListTwo[GetStringHash(String, bLowerCase)] = String;
+    }
+
+    void SetupStringMap(const bool bLowerCase, int WordLimit = 1000)
+    {
+        static_assert(std::is_same_v<T, MapStrings> && "ListTwo must be of type MapStrings");
+        InitFromFile(WordLimit);
+
+        for(const auto& String : TempList)
+            ListTwo[bLowerCase ? GetLowercaseString(String) : String] = String;
     }
     
 private:
@@ -133,6 +149,17 @@ static std::string RunAndMeasure(TStringData<T> StringData, CompareFn<T> Functio
     const auto Start = std::chrono::steady_clock::now();
     while(Iterations-- > 0)
         EqualAmount += Function(StringData.ListOne, StringData.ListTwo);
+    const auto End = std::chrono::steady_clock::now();        
+
+    return std::format("{:.4f},", std::chrono::duration<double, std::milli>(End - Start).count()); 
+}
+
+template<typename T>
+static std::string RunAndMeasure(TStringData<T> StringData, InsertFn<T> Function, int Iterations = 1)
+{
+    const auto Start = std::chrono::steady_clock::now();
+    while(Iterations-- > 0)
+        Function(StringData.ListOne, StringData.ListTwo);
     const auto End = std::chrono::steady_clock::now();        
 
     return std::format("{:.4f},", std::chrono::duration<double, std::milli>(End - Start).count()); 
